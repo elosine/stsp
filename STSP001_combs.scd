@@ -71,30 +71,54 @@ a.set(\t_t1, 1, \pitch, 67);
 (
 SynthDef( \puffdaddy, {
 	//add a freq arg
-	arg t_t1=0, p1=60, dc1=1, p2=64, dc2=1, p3=67, dc3=1, p4=71, dc4=1, p5=72, dc5=1;
-	var imp, d1, c1, d2, c2, d3, c3, d4, c4, d5, c5, sig;
+	arg t_t1=0, ivc = #[3,10,14,23,28,31,32], il1=0.27,d1=0.17, il2=0.2,d2=0.14, il3=0.3,d3=0.22, il4=0.12,d4=0.11, il5=0.24,d5=0.25, il6=0.14,d6=0.19, il7=0.3,d7=0.22, pos=0, wd=2, rq=0.08, amp=4;
+	var iv1 = [3,10,14,23,28,31,32], iv2= [1,4,5,6,7,10,11], iv3= [1,6,11,17,19, 24,30], iv4= [4,6,8,10,11,14,17];
+	var imp, p1,p2,p3,p4,p5,p6,p7, ivs, iv, pd1,pd2,pd3,pd4,pd5,pd6,pd7, c1,c1d, c2,c2d, c3,c3d, c4,c4d, c5,c5d, c6,c6d, c7,c7d, sig;
 	imp = T2A.ar(t_t1);
-	d1 = 1.0/p1.midicps;
-	d2 = 1.0/p2.midicps;
-	d3 = 1.0/p3.midicps;
-	d4 = 1.0/p4.midicps;
-	d5 = 1.0/p5.midicps;
-	c1 = CombC.ar(imp, 0.2, d1, dc1);
-	c2 = CombC.ar(imp, 0.2, d2, dc2);
-	c3 = CombC.ar(imp, 0.2, d3, dc3);
-	c4 = CombC.ar(imp, 0.2, d4, dc4);
-	c5 = CombC.ar(imp, 0.2, d5, dc5);
-	sig = Mix.ar([c1*(1.0/5.0),c2*(1.0/5.0),c3*(1.0/5.0),c4*(1.0/5.0),c5*(1.0/5.0)]);
-	Out.ar(0, sig);
+	p1 = TIRand.kr(43, 79, imp);
+	ivs = [iv1, iv2, iv3, iv4];
+	iv = TChoose.kr(imp, ivs);
+	p2 = p1+iv[0];
+	p3 = p1+iv[1];
+	p4 = p1+iv[2];
+	p5 = p1+iv[3];
+	p6 = p1+iv[4];
+	p7 = p1+iv[5];
+	pd1 = 1.0/p1.midicps;
+	pd2 = 1.0/p2.midicps;
+	pd3 = 1.0/p3.midicps;
+	pd4 = 1.0/p4.midicps;
+	pd5 = 1.0/p5.midicps;
+	pd6 = 1.0/p6.midicps;
+	pd7 = 1.0/p7.midicps;
+	c1 = CombC.ar(imp, 0.2, pd1, il1); //il1 is going to control the length of the initial impulse
+	c1d = CombC.ar(c1, 0.2, TRand.kr(0.08, 0.15, imp), SinOsc.kr( 0.07 ).range(0.3, 2.7)); //d1, controls delay time, the last argument controls length of ping pong tail
+	c2 = CombC.ar(imp, 0.2, pd2, il2);
+	c2d = CombC.ar(c2, 0.2, TRand.kr(0.1, 0.33, imp), SinOsc.kr( 0.06 ).range(0.8, 2.9));
+	c3 = CombC.ar(imp, 0.2, pd3, il3);
+	c3d = CombC.ar(c3, 0.2, TRand.kr(0.09, 0.1, imp), SinOsc.kr( 0.09 ).range(1.5, 1.8));
+	c4 = CombC.ar(imp, 0.2, pd4, il4);
+	c4d = CombC.ar(c4, 0.2, TRand.kr(0.11, 0.5, imp), SinOsc.kr( 0.05 ).range(1.6, 2.1));
+	c5 = CombC.ar(imp, 0.2, pd5, il5);
+	c5d = CombC.ar(c5, 0.2, TRand.kr(0.08, 0.12, imp), SinOsc.kr( 0.02 ).range(0.7, 3.1));
+	c6 = CombC.ar(imp, 0.2, pd6, il6);
+	c6d = CombC.ar(c6, 0.2, TRand.kr(0.098, 0.2, imp), SinOsc.kr( 0.07 ).range(1.1, 1.8));
+	c7 = CombC.ar(imp, 0.2, pd7, il7);
+	c7d = CombC.ar(c7, 0.2, TRand.kr(0.12, 0.3, imp), SinOsc.kr( 0.03 ).range(0.75, 2.5));
+	sig = Mix.ar([ c1*(1.0/3.0),c1d*(1.0/3.0), c2*(1.0/3.0),c2d*(1.0/3.0), c3*(1.0/3.0),c3d*(1.0/3.0), c4*(1.0/4.0),c4d*(1.0/3.0), c5*(1.0/3.0),c5d*(1.0/3.0), c6*(1.0/3.0),c6d*(1.0/3.0), c7*(1.0/3.0),c7d*(1.0/3.0) ]);
+
+	sig = RLPF.ar(sig, SinOsc.kr(0.03).range(1200, 12000), rq);
+
+	//sig = PanAz.ar(8, sig, pos, 1, wd, 0.5);
+	sig = PanAz.ar(8, sig, SinOsc.kr(0.03), 1, wd, 0.5);
+	Out.ar(0, sig*amp);
 }).add;
 )
-a=Synth(\puffdaddy);
-a.set(\t_t1, 1);
-a.set(\t_t1, 1, \pitch, 67);
-//play with decay times til you have a nice sonorous dominant 7 chord
-//strumm
-//messiaen modes
-//randomize modes
+a=Synth(\puffdaddy, [\t_t1, 1]);
+a.set(\t_t1, 1,  \rq, 0.08);
+
+//randomize fundamental pitch
+
 
 
 (
