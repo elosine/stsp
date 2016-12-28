@@ -71,7 +71,7 @@ a.set(\t_t1, 1, \pitch, 67);
 (
 SynthDef( \puffdaddy, {
 	//add a freq arg
-	arg t_t1=0, ivc = #[3,10,14,23,28,31,32], il1=0.27,d1=0.17, il2=0.2,d2=0.14, il3=0.3,d3=0.22, il4=0.12,d4=0.11, il5=0.24,d5=0.25, il6=0.14,d6=0.19, il7=0.3,d7=0.22, pos=0, wd=2, rq=0.08, amp=4, rt=0.5, dp=0.3;
+	arg och=99, t_t1=0, ivc = #[3,10,14,23,28,31,32], il1=0.27,d1=0.17, il2=0.2,d2=0.14, il3=0.3,d3=0.22, il4=0.12,d4=0.11, il5=0.24,d5=0.25, il6=0.14,d6=0.19, il7=0.3,d7=0.22, pos=0, wd=2, rq=0.08, amp=4, rt=0.1, dp=0.5;
 	var iv1 = [3,10,14,23,28,31,32], iv2= [1,4,5,6,7,10,11], iv3= [1,6,11,17,19, 24,30], iv4= [4,6,8,10,11,14,17];
 	var imp, p1,p2,p3,p4,p5,p6,p7, ivs, iv, pd1,pd2,pd3,pd4,pd5,pd6,pd7, c1,c1d, c2,c2d, c3,c3d, c4,c4d, c5,c5d, c6,c6d, c7,c7d, sig;
 	var st2,st3,st4,st5,st6,st7;
@@ -128,14 +128,33 @@ SynthDef( \puffdaddy, {
 	hp = JPverb.ar(hp, rt, dp);
 
 	sig = RLPF.ar(sig, SinOsc.kr(0.03).range(1200, 12000), rq);
+	sig = Mix.ar([sig, hp*0.33]);
 
-	sig = PanAz.ar(8, Mix.ar([sig, hp*0.33]), pos, 1, wd, 0.5);
+	//sig = PanAz.ar(8, Mix.ar([sig, hp*0.33]), pos, 1, wd, 0.5);
 	//sig = PanAz.ar(8, sig, pos, 1, wd, 0.5);
 	//sig = PanAz.ar(8, sig, SinOsc.kr(0.03), 1, wd, 0.5);
-	Out.ar(0, sig*amp);
+	//sig = PanAz.ar(8, Mix.ar([sig, JPverb.ar(hp, rt, dp)*0.33]), SinOsc.kr(0.03), 1, wd, 0.5);
+	Out.ar(och, sig*amp);
 }).add;
+
+SynthDef(\pnr, {
+	arg ich, och=0;
+	var in = In.ar(ich);
+	var sig = PanAz.ar(8, in, SinOsc.kr(0.02), 1, 2, 0.5);
+	Out.ar(och, sig);
+}).add;
+
+//Make Groups
+s.sendMsg(\g_new, 2000);
+s.sendMsg(\g_new, 2001, 3, 2000);
+s.sendMsg(\g_new, 2002, 3, 2001);
 )
-a=Synth(\puffdaddy, [\t_t1, 1]);
+
+a=Synth(\puffdaddy, [\t_t1, 1, \och, 99]);
+s.sendMsg(\s_new, \puffdaddy, 5000, 0, 2000, \t_t1, 1, \och, 99);
+s.sendMsg(\s_new, \pnr, 5001, 0, 2001, \ich, 99, \och, 0);
+s.sendMsg(\n_set, 5000, \t_t1, 1);
+b=Synth(\pnr, [\ich, 99, \och, 99]);
 a.set(\t_t1, 1,  \rq, 0.08, \rt, 0.1, \dp, 0.5);
 
 //randomize fundamental pitch
